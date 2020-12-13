@@ -3,6 +3,11 @@ import numpy
 import math
 import decimal
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+
 
 
 
@@ -128,11 +133,67 @@ for i in range(len(sentences)):
 
 
 
+#Do all calculationshere before moving on to string transform
+
+
+
+#Create yes and no arrays for both the prediction and the true
 prediction = clf.predict(testingmatrix)
+
+predno = []
+trueno = []
+
+#inverse arrays manually for every item in array that is == 1 then append a 0 and viceversa for both prediction and result
+for i in range(len(prediction)):
+    if prediction[i]==1:
+        predno.append(0)
+    else:
+        predno.append(1)
+
+for i in range(len(results)):
+    if results[i] == 1:
+        trueno.append(0)
+    else:
+        trueno.append(1)
+
+
+# finding precision , recall and f1 for yes and no
+yesprecision = precision_score(results,prediction)
+
+noprecision = precision_score(trueno,predno)
+
+yesrecall = recall_score(results,prediction)
+
+norecall = recall_score(trueno,predno)
+
+yesf1 = f1_score(results,prediction)
+
+nof1 = f1_score(trueno,predno)
+
+#creating string to contain both the yes and no in one line
+
+stringprecision = str(yesprecision) + "  " + str(noprecision)
+
+stringrecall = str(yesrecall) + "  " + str(norecall)
+
+stringf1 = str(yesf1) + "  " + str(nof1)
+
+
+
+
 preditprob = clf.predict_proba(testingmatrix)
 score = clf.score(testingmatrix,results)
+accuracy = accuracy_score(prediction,results)
+
+print("--Score--")
 print(score)
+print("--Accuracy--")
+print(accuracy)
+
 rightorwrong = []
+
+
+#creating string variables for Trace File
 
 for i in range(len(prediction)):
     if prediction[i] == results[i]:
@@ -153,10 +214,19 @@ for i in range(len(results)):
         results[i] = str('yes')
     if results[i] == 0:
         results[i] = str('no')
+#Opening output file and printing Trace
 f = open("trace_NB-BOW-0.txt", "a")
 for i in range(len(prediction)):
     outputsentence = str(ids[i]) + "  "+ str(wordprediction[i]) + "  "+ str(preditprob[i]) +"  "+ str(results[i]) +"  "+ str(rightorwrong[i])+"\n"
     f.write(outputsentence)
 
+f.close()
+
+#Opening output file and printing eval
+f = open("eval_NB-BOW-0.txt", "a")
+f.write(str(accuracy)+"\n")
+f.write(stringprecision+"\n")
+f.write(stringrecall+"\n")
+f.write(stringf1+"\n")
 f.close()
 
