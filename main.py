@@ -184,7 +184,8 @@ stringf1 = str(yesf1) + "  " + str(nof1)
 preditprob = clf.predict_proba(testingmatrix)
 score = clf.score(testingmatrix,results)
 accuracy = accuracy_score(prediction,results)
-
+print("--prediction_prob--")
+print(preditprob)
 print("--Score--")
 print(score)
 print("--Accuracy--")
@@ -197,7 +198,7 @@ rightorwrong = []
 
 for i in range(len(prediction)):
     if prediction[i] == results[i]:
-        rightorwrong.append('right')
+        rightorwrong.append('correct')
     else:
         rightorwrong.append('wrong')
 
@@ -217,16 +218,16 @@ for i in range(len(results)):
 #Opening output file and printing Trace
 f = open("trace_NB-BOW-0.txt", "a")
 for i in range(len(prediction)):
-    outputsentence = str(ids[i]) + "  "+ str(wordprediction[i]) + "  "+ str(preditprob[i]) +"  "+ str(results[i]) +"  "+ str(rightorwrong[i])+"\n"
+    outputsentence = str(ids[i]) + "  "+ str(wordprediction[i]) + "  "+ str(preditprob[i][0]) +"  "+ str(results[i]) +"  "+ str(rightorwrong[i])+"\r"
     f.write(outputsentence)
 
 f.close()
 
 #Opening output file and printing eval
 f = open("eval_NB-BOW-0.txt", "a")
-f.write(str(accuracy)+"\n")
-f.write(stringprecision+"\n")
-f.write(stringrecall+"\n")
-f.write(stringf1+"\n")
+f.write(str(accuracy)+"\r")
+f.write(stringprecision+"\r")
+f.write(stringrecall+"\r")
+f.write(stringf1+"\r")
 f.close()
 
