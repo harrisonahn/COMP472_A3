@@ -5,7 +5,7 @@ import math
 import decimal
 from collections import defaultdict
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import recall_score, f1_score, precision_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 
 def filtered_vocabulary():
@@ -42,45 +42,40 @@ def filtered_vocabulary():
 
     joinedsentences = ' '.join(map(str, sentences))
     # adding every word to a list
+    temp_list = []
+    temp_list2 = []
     vocabulary = joinedsentences.split()
-    print("length before removing duplicates: " + str(len(vocabulary)))
-    # removing duplicates from vocabulary
+    print("length before removing words that appear once: " + str(len(vocabulary)))
+    # adding duplicates from vocabulary to new list
+
     vocabulary = list(dict.fromkeys(vocabulary))
-    print("length after removing duplicates: " + str(len(vocabulary)))
+    print(len(vocabulary))
+
+    for words in vocabulary:
+        if vocabulary.count(words) > 1:
+            # print(str(words) + " " + str(vocabulary.count(words)))
+            temp_list.append(words)
+        elif vocabulary.count(words) == 1:
+            temp_list2.append(words)
+    print(len(temp_list2))
+    vocabulary = temp_list
+    print("length after removing words that appear once: " + str(len(vocabulary)))
 
     # create training training matrix
-    trainingmatrix = [[0] * len(vocabulary)] * len(sentences)
+    training_matrix = [[0] * len(vocabulary)] * len(sentences)
 
     for i in range(len(sentences)):
-        wordsinsentence = sentences[i].split()
-        trainingmatrix[i] = [0] * len(vocabulary)
+        words_in_sentence = sentences[i].split()
+        training_matrix[i] = [0] * len(vocabulary)
         for j in range(len(vocabulary)):
-            for k in range(len(wordsinsentence)):
-                if vocabulary[j] == wordsinsentence[k]:
-                    # print("Found match")
-                    # print("sentence index")
-                    # print(i)
-                    # print("vocabulary index")
-                    # print(j)
-                    # print(vocabulary[j])
-                    # print(wordsinsentence[k])
-                    trainingmatrix[i][j] += 1
-
-    # add duplicate words to new list and add new list to dictionary
-    temp_list = trainingmatrix
-    for i in range(len(sentences)):
-        for j in range(len(vocabulary)):
-            if trainingmatrix[i][j] == 1:
-                print(len(trainingmatrix[i][j]))
-                temp_list.remove(trainingmatrix[i][j])
-    print(temp_list)
-    print(len(temp_list))
+            for k in range(len(words_in_sentence)):
+                if vocabulary[j] == words_in_sentence[k]:
+                    training_matrix[i][j] += 1
 
     # train NB
     clf = MultinomialNB()
     clf.class_log_prior_ = 10
-    clf.fit(trainingmatrix, results)
-
+    clf.fit(training_matrix, results)
 
     # open test file
     with open('covid_test_public.tsv', encoding="utf8") as t:
@@ -115,25 +110,52 @@ def filtered_vocabulary():
     sentences.remove(sentences[0])
 
     # create testing matrix
-    testingmatrix = [[0] * len(vocabulary)] * len(sentences)
+    testing_matrix = [[0] * len(vocabulary)] * len(sentences)
 
     for i in range(len(sentences)):
-        wordsinsentence = sentences[i].split()
-        testingmatrix[i] = [0] * len(vocabulary)
+        words_in_sentence = sentences[i].split()
+        testing_matrix[i] = [0] * len(vocabulary)
         for j in range(len(vocabulary)):
-            for k in range(len(wordsinsentence)):
-                if vocabulary[j] == wordsinsentence[k]:
-                    # print("Found match")
-                    # print("sentence index")
-                    # print(i)
-                    # print("vocabulary index")
-                    # print(j)
-                    # print(vocabulary[j])
-                    # print(wordsinsentence[k])
-                    testingmatrix[i][j] += 1
+            for k in range(len(words_in_sentence)):
+                if vocabulary[j] == words_in_sentence[k]:
+                    testing_matrix[i][j] += 1
 
-    prediction = clf.predict(testingmatrix)
-    predictprob = clf.predict_proba(testingmatrix)
+    prediction = clf.predict(testing_matrix)
+
+    prediction_no = []
+    true_no = []
+
+    # inverse arrays manually for every item in array that is == 1 then append a 0 and viceversa for both prediction
+    # and result
+    for i in range(len(prediction)):
+        if prediction[i] == 1:
+            prediction_no.append(0)
+        else:
+            prediction_no.append(1)
+
+    for i in range(len(results)):
+        if results[i] == 1:
+            true_no.append(0)
+        else:
+            true_no.append(1)
+
+    # find precision, recall, and f1 for yes and no
+    precision_yes = precision_score(results, prediction)
+    precision_no = precision_score(true_no, prediction_no)
+    recall_yes = recall_score(results, prediction)
+    recall_no = recall_score(true_no, prediction_no)
+    f1_yes = f1_score(results, prediction)
+    f1_no = f1_score(true_no, prediction_no)
+
+    prediction_prob = clf.predict_proba(testing_matrix)
+    score = clf.score(testing_matrix, results)
+    accuracy = accuracy_score(prediction, results)
+
+    print("\n-- Score --")
+    print(score)
+    print("\n-- Accuracy --")
+    print(accuracy)
+
     correct_or_wrong = []
 
     for i in range(len(prediction)):
@@ -156,28 +178,21 @@ def filtered_vocabulary():
         if results[i] == 0:
             results[i] = str('no')
 
-    print("predictions " + str(word_prediction))
-    print("results " + str(results))
-
-    accuracy = clf.score(testingmatrix, results)
-    per_class_precision = precision_score(results, word_prediction)
-    per_class_recall = recall_score(results, word_prediction)
-    per_class_f1 = f1_score(results, accuracy)
-    print("score = " + str(accuracy))
-    print("per_class_precision = " + str(per_class_precision))
-    print("per_class_recall = " + str(per_class_recall))
-    print("per_class_f1 = " + str(per_class_f1))
-
     f = open("trace_NB-BOW-FV.txt", "a")
     for i in range(len(prediction)):
-        outputsentence = str(ids[i]) + "  " + str(word_prediction[i]) + "  " + str(predictprob[i]) + "  " + str(
+        predict_prob = prediction_prob[i]
+        output_sentence = str(ids[i]) + "  " + str(word_prediction[i]) + "  " + str(predict_prob[0]) + "  " + str(
             results[i]) + "  " + str(correct_or_wrong[i]) + "\n"
-        f.write(outputsentence)
+        f.write(output_sentence)
     f.close()
 
+    # Opening output file and printing evaluation file
     f = open("eval_NB-BOW-FV.txt", "a")
-
-
+    f.write(str(accuracy) + "\r")
+    f.write(str(precision_yes) + "  " + str(precision_no) + "\r")
+    f.write(str(recall_yes) + "  " + str(recall_no) + "\r")
+    f.write(str(f1_yes) + "  " + str(f1_no) + "\r")
+    f.close()
 
 def main():
     filtered_vocabulary()

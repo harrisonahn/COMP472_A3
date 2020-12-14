@@ -42,39 +42,56 @@ def filtered_vocabulary():
 
     joinedsentences = ' '.join(map(str, sentences))
     # adding every word to a list
+    temp_list = []
+    temp_list2 = []
     vocabulary = joinedsentences.split()
     print("length before removing duplicates: " + str(len(vocabulary)))
-    # removing duplicates from vocabulary
+
+    # adding duplicates from vocabulary to new list
+    for words in vocabulary:
+        if vocabulary.count(words) > 1:
+            # print(str(words) + " " + str(vocabulary.count(words)))
+            temp_list.append(words)
+        elif vocabulary.count(words) == 1:
+            temp_list2.append(words)
+
     vocabulary = list(dict.fromkeys(vocabulary))
+    # print("vocabulary length = " + str(len(vocabulary)))
+    # print("words that appear once = " + str(len(temp_list2)))
+    # vocabulary = temp_list
     print("length after removing duplicates: " + str(len(vocabulary)))
 
     # create training training matrix
     training_matrix = [[0] * len(vocabulary)] * len(sentences)
+    new_vocab = [0] * len(vocabulary)
 
     for i in range(len(sentences)):
-        words_in_sentence = sentences[i].split()
+        word_in_sentence = sentences[i].split()
         training_matrix[i] = [0] * len(vocabulary)
         for j in range(len(vocabulary)):
-            for k in range(len(words_in_sentence)):
-                if vocabulary[j] == words_in_sentence[k]:
-                    # print("Found match")
-                    # print("sentence index")
-                    # print(i)
-                    # print(sentences[i])
-                    # print("vocabulary index")
-                    # print(j)
-                    # print(vocabulary[j])
-                    # print(wordsinsentence[k])
+            for k in range(len(word_in_sentence)):
+                if vocabulary[j] == word_in_sentence[k]:
                     training_matrix[i][j] += 1
+                    new_vocab[j] += 1
 
-    # add duplicate words to new list and add new list to dictionary
-    count = 0
-    """for i in range(len(sentences)):
+    temp_vocabulary = []
+    for i in range(len(vocabulary)):
+        if new_vocab[i] > 1:
+            temp_vocabulary.append(vocabulary[i])
+
+    vocabulary = list(dict.fromkeys(temp_vocabulary))
+    print("vocabulary length after removing words that appear only once = " + str(len(vocabulary)))
+
+    # create new training matrix on new vocabulary length
+    training_matrix = [[0] * len(vocabulary)] * len(sentences)
+
+    for i in range(len(sentences)):
+        word_in_sentence = sentences[i].split()
+        training_matrix[i] = [0] * len(vocabulary)
         for j in range(len(vocabulary)):
-            if trainingmatrix[i][j] == 1:
-                vocabulary[j] += 1
-                #del vocabulary[j]
-    print("len of vocab " + str(len(vocabulary)))"""
+            for k in range(len(word_in_sentence)):
+                if vocabulary[j] == word_in_sentence[k]:
+                    training_matrix[i][j] += 1
 
     # train NB
     clf = MultinomialNB()
@@ -122,23 +139,7 @@ def filtered_vocabulary():
         for j in range(len(vocabulary)):
             for k in range(len(words_in_sentence)):
                 if vocabulary[j] == words_in_sentence[k]:
-                    # print("Found match")
-                    # print("sentence index")
-                    # print(i)
-                    # print("vocabulary index")
-                    # print(j)
-                    # print(vocabulary[j])
-                    # print(words_in_sentence[k])
                     testing_matrix[i][j] += 1
-
-    # add duplicate words to new list and add new list to dictionary
-    count = 0
-    """for i in range(len(sentences)):
-        for j in range(len(vocabulary)):
-            if trainingmatrix[i][j] == 1:
-                vocabulary[j] += 1
-                #del vocabulary[j]
-    print("len of vocab " + str(len(vocabulary)))"""
 
     prediction = clf.predict(testing_matrix)
 
@@ -171,9 +172,9 @@ def filtered_vocabulary():
     score = clf.score(testing_matrix, results)
     accuracy = accuracy_score(prediction, results)
 
-    print("-- Score --")
+    print("\n-- Score --")
     print(score)
-    print("-- Accuracy --")
+    print("\n-- Accuracy --")
     print(accuracy)
 
     correct_or_wrong = []
