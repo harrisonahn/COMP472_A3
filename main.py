@@ -216,7 +216,7 @@ for i in range(len(results)):
     if results[i] == 0:
         results[i] = str('no')
 #Opening output file and printing Trace
-f = open("trace_NB-BOW-0.txt", "a")
+f = open("trace_NB-BOW-0V.txt", "a")
 for i in range(len(prediction)):
     outputsentence = str(ids[i]) + "  "+ str(wordprediction[i]) + "  "+ str(preditprob[i][0]) +"  "+ str(results[i]) +"  "+ str(rightorwrong[i])+"\r"
     f.write(outputsentence)
@@ -224,7 +224,7 @@ for i in range(len(prediction)):
 f.close()
 
 #Opening output file and printing eval
-f = open("eval_NB-BOW-0.txt", "a")
+f = open("eval_NB-BOW-0V.txt", "a")
 f.write(str(accuracy)+"\r")
 f.write(stringprecision+"\r")
 f.write(stringrecall+"\r")
