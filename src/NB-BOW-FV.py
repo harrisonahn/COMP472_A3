@@ -5,7 +5,7 @@ import math
 import decimal
 from collections import defaultdict
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 
 def filtered_vocabulary():
@@ -131,8 +131,51 @@ def filtered_vocabulary():
                     # print(words_in_sentence[k])
                     testing_matrix[i][j] += 1
 
+    # add duplicate words to new list and add new list to dictionary
+    count = 0
+    """for i in range(len(sentences)):
+        for j in range(len(vocabulary)):
+            if trainingmatrix[i][j] == 1:
+                vocabulary[j] += 1
+                #del vocabulary[j]
+    print("len of vocab " + str(len(vocabulary)))"""
+
     prediction = clf.predict(testing_matrix)
-    predictprob = clf.predict_proba(testing_matrix)
+
+    prediction_no = []
+    true_no = []
+
+    # inverse arrays manually for every item in array that is == 1 then append a 0 and viceversa for both prediction
+    # and result
+    for i in range(len(prediction)):
+        if prediction[i] == 1:
+            prediction_no.append(0)
+        else:
+            prediction_no.append(1)
+
+    for i in range(len(results)):
+        if results[i] == 1:
+            true_no.append(0)
+        else:
+            true_no.append(1)
+
+    # find precision, recall, and f1 for yes and no
+    precision_yes = precision_score(results, prediction)
+    precision_no = precision_score(true_no, prediction_no)
+    recall_yes = recall_score(results, prediction)
+    recall_no = recall_score(true_no, prediction_no)
+    f1_yes = f1_score(results, prediction)
+    f1_no = f1_score(true_no, prediction_no)
+
+    prediction_prob = clf.predict_proba(testing_matrix)
+    score = clf.score(testing_matrix, results)
+    accuracy = accuracy_score(prediction, results)
+
+    print("-- Score --")
+    print(score)
+    print("-- Accuracy --")
+    print(accuracy)
+
     correct_or_wrong = []
 
     for i in range(len(prediction)):
@@ -140,15 +183,6 @@ def filtered_vocabulary():
             correct_or_wrong.append('correct')
         else:
             correct_or_wrong.append('wrong')
-
-    accuracy = clf.score(testing_matrix, results)
-    precision_yes_positive = precision_score(results, prediction)
-    recall_yes_positive = recall_score(results, prediction)
-    f1_yes_positive = f1_score(results, prediction)
-    print("score = " + str(accuracy))
-    print("per_class_precision = " + str(precision_yes_positive))
-    print("per_class_recall = " + str(recall_yes_positive))
-    print("per_class_f1 = " + str(f1_yes_positive))
 
     length = len(prediction)
     word_prediction = [[0]] * length
@@ -164,21 +198,21 @@ def filtered_vocabulary():
         if results[i] == 0:
             results[i] = str('no')
 
-    print("predictions " + str(word_prediction))
-    print("results " + str(results))
-
-
-
     f = open("trace_NB-BOW-FV.txt", "a")
     for i in range(len(prediction)):
-        outputsentence = str(ids[i]) + "  " + str(word_prediction[i]) + "  " + str(predictprob[i]) + "  " + str(
+        predict_prob = prediction_prob[i]
+        output_sentence = str(ids[i]) + "  " + str(word_prediction[i]) + "  " + str(predict_prob[0]) + "  " + str(
             results[i]) + "  " + str(correct_or_wrong[i]) + "\n"
-        f.write(outputsentence)
+        f.write(output_sentence)
     f.close()
 
+    # Opening output file and printing evaluation file
     f = open("eval_NB-BOW-FV.txt", "a")
-
-
+    f.write(str(accuracy) + "\r")
+    f.write(str(precision_yes) + "  " + str(precision_no) + "\r")
+    f.write(str(recall_yes) + "  " + str(recall_no) + "\r")
+    f.write(str(f1_yes) + "  " + str(f1_no) + "\r")
+    f.close()
 
 def main():
     filtered_vocabulary()
